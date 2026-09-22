@@ -48,7 +48,7 @@ CPG dataset so every view works immediately with no upload required.
 All core logic lives in `lib/` (`sampleData.ts`, `masterDb.ts`,
 `analysis.ts`) and is shared by both the client UI and the API routes.
 
-## Deploy to Vercel (I can't push this live myself — here's the fastest path)
+## Deploy to Vercel
 
 **Option A — Vercel CLI (no GitHub needed)**
 ```bash
