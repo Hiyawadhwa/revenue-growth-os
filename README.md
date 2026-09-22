@@ -7,10 +7,6 @@ Intelligence, Marketing Efficiency, Customer Intel, Supply Chain, Pricing &
 Discount, Shelf & Packaging, Competition, Market Expansion), and export a
 board-ready PPTX deck.
 
-Built independently as a functional recreation based on the public UI/flow of
-`revenue-growth-model-in-cpg.vercel.app`. It is not the original codebase and
-is not affiliated with that site's author — treat it as a from-scratch
-rebuild, not a copy of their source.
 
 ## Stack
 
