@@ -35,7 +35,12 @@ const NAV_ITEMS: { label: string; section: Section }[] = [
 const MORE_VIEW_IDS: ViewId[] = ["supply", "shelf", "competition"];
 
 
-function downloadBlob(data: BlobPart | Uint8Array<ArrayBufferLike>, filename: string, type: string) {
+
+function downloadBlob(
+  data: string | ArrayBuffer | Uint8Array,
+  filename: string,
+  type: string
+) {
   let blob: Blob;
 
   if (data instanceof Uint8Array) {
@@ -53,6 +58,7 @@ function downloadBlob(data: BlobPart | Uint8Array<ArrayBufferLike>, filename: st
   a.click();
   URL.revokeObjectURL(url);
 }
+
 
 
 export default function Page() {
