@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model DataUpload {
+  id             String             @id @default(cuid())
+  fileName       String
+  totalRecords   Int
+  validRecords   Int
+  invalidRecords Int
+  duplicateCount Int
+  qualityPct     Float
+  createdAt      DateTime           @default(now())
+  results        ValidationResult[]
+  exceptions     Exception[]
+}
+
+model ValidationResult {
+  id       Int        @id @default(autoincrement())
+  uploadId String
+  ruleId   String
+  ruleName String
+  category String
+  level    String
+  status   String
+  affected Int
+  upload   DataUpload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+
+  @@index([uploadId])
+}
+
+model Exception {
+  id         Int        @id @default(autoincrement())
+  uploadId   String
+  ruleId     String
+  ruleName   String
+  severity   String
+  rowNumber  Int
+  record     String
+  message    String
+  status     String     @default("Open")
+  notes      String     @default("")
+  detectedAt DateTime   @default(now())
+  resolvedAt DateTime?
+  upload     DataUpload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+
+  @@index([uploadId, status])
+}
+
+model ReconciliationRun {
+  id          Int      @id @default(autoincrement())
+  sourceA     String
+  sourceB     String
+  recordsA    Int
+  recordsB    Int
+  matched     Int
+  unmatched   Int
+  mismatches  Int
+  duplicates  Int
+  discrepancy Float
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  action    String
+  detail    String
+  uploadId  String?
+  createdAt DateTime @default(now())
+}

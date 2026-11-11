@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { X, BarChart3, FlaskConical, FileText, ChevronDown } from "lucide-react";
+import { X, BarChart3, FlaskConical, FileText, ChevronDown, ShieldCheck } from "lucide-react";
 import FilterBar from "@/components/FilterBar";
 import ViewPanel from "@/components/ViewPanel";
 import OverviewPage from "@/components/OverviewPage";
@@ -34,8 +34,18 @@ const NAV_ITEMS: { label: string; section: Section }[] = [
 // Existing analysis views not covered by the primary nav mapping — kept reachable, out of the way, under "More".
 const MORE_VIEW_IDS: ViewId[] = ["supply", "shelf", "competition"];
 
-function downloadBlob(data: BlobPart, filename: string, type: string) {
-  const blob = new Blob([data], { type });
+
+function downloadBlob(data: BlobPart | Uint8Array<ArrayBufferLike>, filename: string, type: string) {
+  let blob: Blob;
+
+  if (data instanceof Uint8Array) {
+    const buffer = new ArrayBuffer(data.byteLength);
+    new Uint8Array(buffer).set(data);
+    blob = new Blob([buffer], { type });
+  } else {
+    blob = new Blob([data], { type });
+  }
+
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -43,6 +53,7 @@ function downloadBlob(data: BlobPart, filename: string, type: string) {
   a.click();
   URL.revokeObjectURL(url);
 }
+
 
 export default function Page() {
   const [sampleRaw] = useState(() => generateSampleData());
@@ -261,6 +272,10 @@ export default function Page() {
           <FlaskConical className="h-3.5 w-3.5" />
           What-If Analysis
         </Link>
+           <Link href="/governance" className="flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-ink-lo hover:bg-base-850 hover:text-ink-hi">
+             <ShieldCheck className="h-3.5 w-3.5" />
+               Data Quality
+           </Link>
         <button
           onClick={() => {
             setSection("report");

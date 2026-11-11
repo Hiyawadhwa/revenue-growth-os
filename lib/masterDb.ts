@@ -4,6 +4,7 @@ import { MasterRow, RawRow } from "./types";
 // Fuzzy header aliases -> canonical RawRow field, used when auto-mapping an
 // arbitrary raw Sales / SAP / POS export.
 const HEADER_ALIASES: Record<keyof RawRow, string[]> = {
+  TransactionID: ["transaction id", "transactionid", "order id", "orderid", "txn id", "invoice no", "invoice number"],
   Date: ["date", "txn date", "order date", "transaction date"],
   Product: ["product", "sku", "product / sku", "item", "item name"],
   Category: ["category", "product category"],
@@ -43,8 +44,8 @@ function backfillDate(raw: string | number | undefined): string {
   return s;
 }
 
-/** Parse an arbitrary raw export (xlsx/xls/csv) into normalized RawRow[]. */
-export function parseRawWorkbook(buffer: ArrayBuffer): { rows: RawRow[]; flagged: number } {
+/** Read the sheet and map headers to canonical RawRow keys. No defaults applied, so gaps stay visible to validation. */
+export function readMappedSheet(buffer: ArrayBuffer): Record<string, any>[] {
   const wb = XLSX.read(buffer, { type: "array", cellDates: false });
   const sheetName =
     wb.SheetNames.find((n) => /master ?db/i.test(n)) || wb.SheetNames[0];
@@ -53,8 +54,7 @@ export function parseRawWorkbook(buffer: ArrayBuffer): { rows: RawRow[]; flagged
 
   const headerMap = new Map<string, keyof RawRow>();
   if (json.length) {
-    const headers = Object.keys(json[0]);
-    for (const h of headers) {
+    for (const h of Object.keys(json[0])) {
       const nh = normalize(h);
       for (const key of Object.keys(HEADER_ALIASES) as (keyof RawRow)[]) {
         if (nh === normalize(key) || HEADER_ALIASES[key].some((a) => normalize(a) === nh)) {
@@ -64,12 +64,17 @@ export function parseRawWorkbook(buffer: ArrayBuffer): { rows: RawRow[]; flagged
     }
   }
 
+  return json.map((r) => {
+    const out: Record<string, any> = {};
+    for (const [rawHeader, key] of headerMap.entries()) out[key] = r[rawHeader];
+    return out;
+  });
+}
+
+/** Parse an arbitrary raw export (xlsx/xls/csv) into normalized RawRow[]. */
+export function parseRawWorkbook(buffer: ArrayBuffer): { rows: RawRow[]; flagged: number } {
   let flagged = 0;
-  const rows: RawRow[] = json.map((r) => {
-    const out: any = {};
-    for (const [rawHeader, key] of headerMap.entries()) {
-      out[key] = r[rawHeader];
-    }
+  const rows: RawRow[] = readMappedSheet(buffer).map((out: any) => {
     if (!out.Date) flagged++;
     out.Date = backfillDate(out.Date);
     out.ExpiryDate = out.ExpiryDate ? backfillDate(out.ExpiryDate) : "";
@@ -89,7 +94,6 @@ export function parseRawWorkbook(buffer: ArrayBuffer): { rows: RawRow[]; flagged
     out.NPS = Number(out.NPS) || 7;
     return out as RawRow;
   });
-
   return { rows, flagged };
 }
 

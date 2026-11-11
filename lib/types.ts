@@ -1,4 +1,5 @@
 export interface RawRow {
+  TransactionID?: string; // optional order / invoice ID, used for duplicate + reconciliation checks
   Date: string; // MM/DD/YYYY
   Product: string;
   Category: string;
